@@ -15,30 +15,48 @@ function App() {
   const qtyRef = useRef();
 
   const [dataItems, setDataItems] = useState([]);
-  const [ppu, setPpu] = useState(products[0].price)
+  const [ppu, setPpu] = useState(products[0].price);
+  const [discount, setDiscount] = useState(0); // State for discount
 
   const addItem = () => {
-    let item = products.find((v) => itemRef.current.value === v.code)
+    let item = products.find((v) => itemRef.current.value === v.code);
 
     const newItem = {
       item: item.name,
       ppu: ppuRef.current.value,
       qty: qtyRef.current.value,
+      discount: discount, // Include discount in new item
     };
 
-    setDataItems([...dataItems, newItem]);
+    const existingItem = dataItems.find(i => i.item === newItem.item && i.ppu === newItem.ppu);
+
+    if (existingItem) {
+      existingItem.qty = parseInt(existingItem.qty) + parseInt(newItem.qty);
+      existingItem.discount = parseFloat(existingItem.discount) + parseFloat(newItem.discount);
+      setDataItems([...dataItems]);
+    } else {
+      setDataItems([...dataItems, newItem]);
+    }
   };
 
   const deleteByIndex = (index) => {
     let newDataItems = [...dataItems];
     newDataItems.splice(index, 1);
     setDataItems(newDataItems);
-  }
+  };
 
   const productChange = () => {
-    let item = products.find((v) => itemRef.current.value === v.code)
-    setPpu(item.price)
-  }
+    let item = products.find((v) => itemRef.current.value === v.code);
+    setPpu(item.price);
+  };
+
+  const clearItems = () => {
+    setDataItems([]); // This clears all items from the table
+  };
+
+  const calculateTotalDiscount = () => {
+    return dataItems.reduce((acc, item) => acc + parseFloat(item.discount || 0), 0);
+  };
 
   return (
     <Container>
@@ -48,20 +66,23 @@ function App() {
             <Col>
               Item
               <Form.Select ref={itemRef} onChange={productChange}>
-                {
-                  products.map((p) => (
-                    <option key={p.code} value={p.code}>
-                      {p.name}
-                    </option>
-                  ))
-                }
+                {products.map((p) => (
+                  <option key={p.code} value={p.code}>
+                    {p.name}
+                  </option>
+                ))}
               </Form.Select>
             </Col>
           </Row>
           <Row>
             <Col>
               <Form.Label>Price Per Unit</Form.Label>
-              <Form.Control type="number" ref={ppuRef} value={ppu} onChange={e => setPpu(ppuRef.current.value)} />
+              <Form.Control
+                type="number"
+                ref={ppuRef}
+                value={ppu}
+                onChange={(e) => setPpu(ppuRef.current.value)}
+              />
             </Col>
           </Row>
           <Row>
@@ -70,17 +91,32 @@ function App() {
               <Form.Control type="number" ref={qtyRef} defaultValue={1} />
             </Col>
           </Row>
+          <Row>
+            <Col>
+              <Form.Label>Discount</Form.Label>
+              <Form.Control
+                type="number"
+                value={discount}
+                onChange={(e) => setDiscount(e.target.value)}
+              />
+            </Col>
+          </Row>
           <hr />
           <div className="d-grid gap-2">
             <Button variant="primary" onClick={addItem}>
               Add
+            </Button>
+            <Button variant="danger" onClick={clearItems}>
+              Clear
             </Button>
           </div>
         </Col>
         <Col md={8}>
           <QuotationTable
             data={dataItems}
-            deleteByIndex={deleteByIndex} />
+            deleteByIndex={deleteByIndex}
+            calculateTotalDiscount={calculateTotalDiscount}
+          />
         </Col>
       </Row>
     </Container>

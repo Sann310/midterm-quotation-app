@@ -1,15 +1,10 @@
-/*
-More icons at https://react-icons.github.io/react-icons/
-*/
-
 import { Container, Button, Table } from "react-bootstrap";
 import { CiShoppingCart } from "react-icons/ci";
 import { MdClear } from "react-icons/md";
 import { BsFillTrashFill } from "react-icons/bs";
-
 import style from "./mystyle.module.css";
 
-function QuotationTable({ data, deleteByIndex }) {
+function QuotationTable({ data, deleteByIndex, calculateTotalDiscount }) {
 
   // Guard condition
   if (!data || data.length === 0) {
@@ -23,16 +18,9 @@ function QuotationTable({ data, deleteByIndex }) {
 
   const total = data.reduce((acc, v) => acc + v.qty * v.ppu, 0);
 
-  const handleDelete = (index) => {
-    deleteByIndex(index)
-  }
-
   return (
     <Container>
       <h1>Quotation</h1>
-      <Button variant="outline-dark">
-        <MdClear /> Clear
-      </Button>
       <Table striped bordered hover>
         <thead>
           <tr>
@@ -40,29 +28,35 @@ function QuotationTable({ data, deleteByIndex }) {
             <th className={style.textCenter}>Qty</th>
             <th className={style.textCenter}>Item</th>
             <th className={style.textCenter}>Price/Unit</th>
+            <th className={style.textCenter}>Discount</th> {/* New Discount Column */}
             <th className={style.textCenter}>Amount</th>
           </tr>
         </thead>
-        <tbody>{
-          data.map((v, i) => {
-            let amount = v.qty * v.ppu;
+        <tbody>
+          {data.map((v, i) => {
+            let amount = v.qty * v.ppu - v.discount; // Subtract discount from amount
             return (
               <tr key={i}>
-                <td className={style.textCenter}><BsFillTrashFill onClick={() => handleDelete(i)} /></td>
+                <td className={style.textCenter}><BsFillTrashFill onClick={() => deleteByIndex(i)} /></td>
                 <td className={style.textCenter}>{v.qty}</td>
                 <td>{v.item}</td>
                 <td className={style.textCenter}>{v.ppu}</td>
+                <td className={style.textCenter}>{v.discount}</td> {/* Display Discount */}
                 <td className={style.textRight}>{amount}</td>
               </tr>
             );
-          })
-        }</tbody>
+          })}
+        </tbody>
         <tfoot>
           <tr>
-            <td colSpan={3} className={style.textRight}>
-              Total
-            </td>
-            <td className={style.textRight}>{total}</td>
+            <td colSpan={3}></td> {/* Empty columns to align Total */}
+            <td className={style.textRight}>Total</td>
+            <td className={style.textRight}>{total}</td> {/* Total Amount */}
+          </tr>
+          <tr>
+            <td colSpan={3}></td> {/* Empty columns to align Total Discount */}
+            <td className={style.textRight}>Total Discount:</td>
+            <td className={style.textRight}>{calculateTotalDiscount()}</td> {/* Total Discount Amount */}
           </tr>
         </tfoot>
       </Table>
